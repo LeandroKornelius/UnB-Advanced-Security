@@ -1,3 +1,5 @@
+import os
+import ssl
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 from db import get_users_emails, add_user
@@ -102,5 +104,15 @@ class ProtectedHandler(BaseHTTPRequestHandler):
             return
 
 if __name__ == '__main__':
-    print('🛡️ Protected API running on http://localhost:3000')
-    HTTPServer(('localhost', 3000), ProtectedHandler).serve_forever()
+    cert_path = os.path.join(os.path.dirname(__file__), '..', 'cert.pem')
+    key_path = os.path.join(os.path.dirname(__file__), '..', 'key.pem')
+
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(certfile=cert_path, keyfile=key_path)
+
+    server_address = ('localhost', 3000)
+    httpd = HTTPServer(server_address, ProtectedHandler)
+    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+
+    print('🛡️ Protected API running securely on https://localhost:3000')
+    httpd.serve_forever()

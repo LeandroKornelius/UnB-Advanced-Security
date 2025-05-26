@@ -2,17 +2,23 @@ import time
 import jwt
 import requests
 
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CERT_PATH = os.path.join(BASE_DIR, 'cert.pem')
+
+
 AUTH_URLS = {
-    'RS256': 'http://localhost:3333/login/rs',
-    'PS256': 'http://localhost:3333/login/ps',
-    'HS256': 'http://localhost:3333/login/hs',
+    'RS256': 'https://localhost:3333/login/rs',
+    'PS256': 'https://localhost:3333/login/ps',
+    'HS256': 'https://localhost:3333/login/hs',
 }
 
 DATA_URLS = {
-    'RS256': 'http://localhost:3000/users/rs',
-    'PS256': 'http://localhost:3000/users/ps',
-    'HS256': 'http://localhost:3000/users/hs',
-    'sign-up': 'http://localhost:3000/users/sign-up'
+    'RS256': 'https://localhost:3000/users/rs',
+    'PS256': 'https://localhost:3000/users/ps',
+    'HS256': 'https://localhost:3000/users/hs',
+    'sign-up': 'https://localhost:3000/users/sign-up'
 }
 
 SHARED_SECRET = 'leozismo'
@@ -43,7 +49,7 @@ def sign_up(email, password):
         'password': password
     }
 
-    response = requests.post(DATA_URLS['sign-up'], json=payload)
+    response = requests.post(DATA_URLS['sign-up'], json=payload, verify=False)
 
     if response.status_code == 201:
         print(f'User {email} created successfully.')
@@ -57,7 +63,7 @@ def login(email, password, method):
         'email': email,
         'password': password
     }
-    response = requests.post(AUTH_URLS[method], json=payload)
+    response = requests.post(AUTH_URLS[method], json=payload, verify=False)
 
     if response.status_code == 200:
         token = response.json().get("token")
@@ -72,7 +78,7 @@ def get_user_emails(token, method, test_name=''):
     if headers is not None:
         headers['Authorization'] = f'Bearer {token}'
 
-    response = requests.get(DATA_URLS[method], headers=headers)
+    response = requests.get(DATA_URLS[method], headers=headers, verify=False)
 
     print(f'\n{test_name} for {method}')
     print(f'Status Code: {response.status_code}')
