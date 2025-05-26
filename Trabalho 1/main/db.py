@@ -63,7 +63,7 @@ def get_users_emails():
         con = sqlite3.connect(DB_PATH)
         cur = con.cursor()
         cur.execute('SELECT email FROM users')
-        users = cur.fetchall()
+        users = [row[0] for row in cur.fetchall()]
         con.close()
         return users
     except:

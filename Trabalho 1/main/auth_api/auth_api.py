@@ -1,7 +1,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-from main.db import check_user_password
-from main.jwt_handlers.jwt_handlers import generate_token
+from db import check_user_password
+from jwt_handlers.jwt_handlers import generate_token
 
 class AuthHandler(BaseHTTPRequestHandler):
     def do_POST(self):

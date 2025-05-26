@@ -1,7 +1,13 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
-from main.db import get_users_emails, add_user
-from main.jwt_handlers.jwt_handlers import validate_token
+from db import get_users_emails, add_user
+from jwt_handlers.jwt_handlers import (
+    validate_token,
+    TokenMissingError,
+    TokenExpiredError,
+    TokenInvalidError,
+    UnsupportedAlgorithmError
+)
 
 class ProtectedHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -21,16 +27,37 @@ class ProtectedHandler(BaseHTTPRequestHandler):
         if not auth_header or not auth_header.startswith('Bearer '):
             self.send_response(401)
             self.end_headers()
-            self.wfile.write(b'Unauthorized')
+            self.wfile.write(b'Token not provided')
             return
 
         token = auth_header.split()[1]
-        payload = validate_token(token, method)
 
-        if not payload:
+        try:
+            payload = validate_token(token, method)
+        except TokenMissingError:
+            self.send_response(401)
+            self.end_headers()
+            self.wfile.write(b'Token is missing.')
+            return
+        except TokenExpiredError:
+            self.send_response(401)
+            self.end_headers()
+            self.wfile.write(b'Token has expired.')
+            return
+        except TokenInvalidError:
             self.send_response(403)
             self.end_headers()
-            self.wfile.write(b'Unauthorized or invalid token')
+            self.wfile.write(b'Token is invalid.')
+            return
+        except UnsupportedAlgorithmError:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b'Unsupported token algorithm.')
+            return
+        except Exception as e:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b'Internal server error.')
             return
 
         emails = get_users_emails()
